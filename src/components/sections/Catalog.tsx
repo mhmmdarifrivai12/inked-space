@@ -46,7 +46,7 @@ export const Catalog = () => {
           onClick={() => setOpen(true)}
           className="inline-flex items-center gap-2 bg-gradient-maroon text-primary-foreground dark:text-foreground px-8 py-4 rounded-full text-sm tracking-wide hover:shadow-glow transition-all duration-500 hover:scale-105"
         >
-          <BookOpen className="h-4 w-4" /> {catalog.buttonLabel}
+          <BookOpen className="h-4 w-4" /> {catalog.buttonLabel || "Buka Katalog"}
         </button>
       </div>
 

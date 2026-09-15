@@ -8,6 +8,8 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
+import Queue from "./pages/Queue.tsx";
+import AdminQueue from "./pages/AdminQueue.tsx";
 import { AuthProvider } from "@/hooks/useAuth";
 import { SiteContentProvider } from "@/hooks/useSiteContent";
 
@@ -26,6 +28,8 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/queue" element={<AdminQueue />} />
+                <Route path="/queue" element={<Queue />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

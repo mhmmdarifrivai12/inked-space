@@ -2,13 +2,17 @@ import { useSiteContent } from "@/hooks/useSiteContent";
 
 export const About = () => {
   const { content: { about } } = useSiteContent();
+  const hasText = [about.eyebrow, about.title, about.titleAccent, about.p1, about.p2].some((t) => t?.trim());
+  if (!hasText && !about.imageUrl) return null;
   return (
     <section id="about" className="py-12 md:py-24 px-6">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-20 items-center">
-        <div className="relative group">
-          <div className="absolute -inset-4 bg-gradient-maroon rounded-[2rem] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity duration-700" />
-          <img src={about.imageUrl} alt="Studio inked.space" loading="lazy" className="relative rounded-[2rem] shadow-soft w-full" />
-        </div>
+        {about.imageUrl && (
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-gradient-maroon rounded-[2rem] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity duration-700" />
+            <img src={about.imageUrl} alt={about.title || "Studio"} loading="lazy" className="relative rounded-[2rem] shadow-soft w-full" />
+          </div>
+        )}
 
         <div>
           <p className="text-xs tracking-[0.3em] uppercase text-accent mb-3">{about.eyebrow}</p>

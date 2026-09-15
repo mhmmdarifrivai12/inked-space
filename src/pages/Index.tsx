@@ -24,20 +24,24 @@ const SECTIONS: Record<SectionKey, React.ComponentType> = {
 };
 
 const Index = () => {
-  const { content } = useSiteContent();
+  const { content, loading } = useSiteContent();
   return (
     <>
       <Splash />
-      <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
-        <Navbar />
-        <Hero />
-        {content.sectionOrder.map((key) => {
-          const C = SECTIONS[key];
-          return C ? <C key={key} /> : null;
-        })}
-        <Footer />
-        <FloatingWA />
-      </main>
+      {!loading && (
+        <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
+          <Navbar />
+          <Hero />
+          {content.sectionOrder
+            .filter((key) => !(content.hiddenSections ?? []).includes(key))
+            .map((key) => {
+              const C = SECTIONS[key];
+              return C ? <C key={key} /> : null;
+            })}
+          <Footer />
+          <FloatingWA />
+        </main>
+      )}
     </>
   );
 };

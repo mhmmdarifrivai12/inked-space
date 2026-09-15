@@ -7,8 +7,11 @@ import { defaultContent, defaultSectionOrder, SectionKey, SiteContent } from "@/
 import { toast } from "sonner";
 import {
   Loader2, LogOut, Plus, Save, Trash2, ExternalLink, ArrowUp, ArrowDown,
-  Image as ImageIcon, Layout, Star, Menu, X, MailOpen, Mail, Inbox, Settings2, ListOrdered,
+  Image as ImageIcon, Layout, Star, Menu, X, MailOpen, Mail, Inbox, Settings2, ListOrdered, Ticket as TicketIcon,
+  Eye, EyeOff,
 } from "lucide-react";
+import { QueuePanel } from "@/components/admin/QueuePanel";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 const Field = ({ label, value, onChange, type = "text", textarea }: any) => (
   <div>
@@ -35,7 +38,7 @@ type FeedbackRow = {
   read: boolean; created_at: string;
 };
 
-type Tab = "brand" | "hero" | "about" | "gallery" | "catalog" | "booking" | "faq" | "feedback" | "contact" | "order" | "inbox";
+type Tab = "brand" | "hero" | "about" | "gallery" | "catalog" | "booking" | "faq" | "feedback" | "contact" | "order" | "inbox" | "queue";
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "brand", label: "Brand", icon: Settings2 },
@@ -48,6 +51,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "feedback", label: "Kritik & Saran", icon: Star },
   { id: "contact", label: "Contact", icon: Layout },
   { id: "order", label: "Urutan Section", icon: ListOrdered },
+  { id: "queue", label: "Antrian", icon: TicketIcon },
   { id: "inbox", label: "Inbox Masukan", icon: Inbox },
 ];
 
@@ -98,7 +102,7 @@ export default function Admin() {
     refresh();
   };
 
-  const reset = () => { setC(defaultContent); toast("Direset ke default. Klik Simpan untuk menerapkan."); };
+  const reset = () => { setC(defaultContent); toast("Semua konten dikosongkan. Klik Simpan untuk menerapkan."); };
   const signOut = async () => { await supabase.auth.signOut(); nav("/auth"); };
 
   const toggleRead = async (row: FeedbackRow) => {
@@ -138,7 +142,7 @@ export default function Admin() {
     </nav>
   );
 
-  const isDataTab = tab !== "inbox";
+  const isDataTab = tab !== "inbox" && tab !== "queue";
 
   return (
     <main className="min-h-screen bg-background pb-28">
@@ -189,8 +193,8 @@ export default function Admin() {
           {tab === "brand" && (
             <Card title="Brand">
               <Field label="Nama Toko" value={c.brand.name} onChange={(v: string) => setPath(["brand", "name"], v)} />
-              <Field label="Logo URL" value={c.brand.logoUrl} onChange={(v: string) => setPath(["brand", "logoUrl"], v)} />
-              {c.brand.logoUrl && <img src={c.brand.logoUrl} alt="" className="h-16 w-16 object-cover rounded-full bg-background/40 ring-1 ring-border" />}
+              <ImageUpload label="Logo" value={c.brand.logoUrl} onChange={(v) => setPath(["brand", "logoUrl"], v)} aspect="square" />
+
             </Card>
           )}
 
@@ -202,7 +206,7 @@ export default function Admin() {
                 <Field label="Judul Aksen (italic gold)" value={c.hero.titleAccent} onChange={(v: string) => setPath(["hero", "titleAccent"], v)} />
               </div>
               <Field label="Subtitle" value={c.hero.subtitle} onChange={(v: string) => setPath(["hero", "subtitle"], v)} textarea />
-              <Field label="Background Image URL" value={c.hero.imageUrl} onChange={(v: string) => setPath(["hero", "imageUrl"], v)} />
+              <ImageUpload label="Background Hero" value={c.hero.imageUrl} onChange={(v) => setPath(["hero", "imageUrl"], v)} aspect="video" />
             </Card>
           )}
 
@@ -215,7 +219,7 @@ export default function Admin() {
               </div>
               <Field label="Paragraf 1" value={c.about.p1} onChange={(v: string) => setPath(["about", "p1"], v)} textarea />
               <Field label="Paragraf 2" value={c.about.p2} onChange={(v: string) => setPath(["about", "p2"], v)} textarea />
-              <Field label="Image URL" value={c.about.imageUrl} onChange={(v: string) => setPath(["about", "imageUrl"], v)} />
+              <ImageUpload label="Foto About" value={c.about.imageUrl} onChange={(v) => setPath(["about", "imageUrl"], v)} aspect="square" />
               <div>
                 <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Stats (3 item)</p>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -233,26 +237,39 @@ export default function Admin() {
           )}
 
           {tab === "gallery" && (
-            <Card title="Gallery (URL Gambar)">
+            <Card title="Gallery">
               <div className="space-y-3">
                 {c.gallery.map((g, i) => (
-                  <div key={i} className="flex gap-2 sm:gap-3 items-start">
-                    {g.src && <img src={g.src} alt="" className="h-12 w-12 sm:h-14 sm:w-14 object-cover rounded-lg shrink-0" />}
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-2 min-w-0">
-                      <input value={g.src} onChange={(e) => setPath(["gallery", i, "src"], e.target.value)}
-                        placeholder="URL gambar" className="bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-w-0" />
-                      <input value={g.label} onChange={(e) => setPath(["gallery", i, "label"], e.target.value)}
-                        placeholder="Label" className="bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" />
-                    </div>
-                    <button onClick={() => setPath(["gallery"], c.gallery.filter((_, j) => j !== i))}
-                      className="p-2 text-muted-foreground hover:text-destructive shrink-0"><Trash2 className="h-4 w-4" /></button>
+                  <div key={i} className="flex gap-3 items-center p-3 rounded-2xl border border-border bg-background/30">
+                    <ImageUpload
+                      compact
+                      value={g.src}
+                      onChange={(v) => setPath(["gallery", i, "src"], v)}
+                    />
+                    <input
+                      value={g.label}
+                      onChange={(e) => setPath(["gallery", i, "label"], e.target.value)}
+                      placeholder="Label"
+                      className="flex-1 min-w-0 bg-background/50 border border-border rounded-xl px-3 py-2 text-sm"
+                    />
+                    <button
+                      onClick={() => setPath(["gallery"], c.gallery.filter((_, j) => j !== i))}
+                      className="p-2 text-muted-foreground hover:text-destructive shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 ))}
-                <button onClick={() => setPath(["gallery"], [...c.gallery, { src: "", label: "" }])}
-                  className="glass rounded-xl px-4 py-2 text-xs flex items-center gap-2 hover:maroon-glow"><Plus className="h-3.5 w-3.5" /> Tambah Gambar</button>
+                <button
+                  onClick={() => setPath(["gallery"], [...c.gallery, { src: "", label: "" }])}
+                  className="glass rounded-xl px-4 py-2 text-xs flex items-center gap-2 hover:maroon-glow"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Tambah Gambar
+                </button>
               </div>
             </Card>
           )}
+
 
           {tab === "catalog" && (
             <Card title="Katalog (PDF)">
@@ -312,8 +329,6 @@ export default function Admin() {
 
           {tab === "contact" && (
             <Card title="Contact">
-              <Field label="Nama Studio" value={c.contact.studioName} onChange={(v: string) => setPath(["contact", "studioName"], v)} />
-              <Field label="Alamat" value={c.contact.address} onChange={(v: string) => setPath(["contact", "address"], v)} textarea />
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="WhatsApp" value={c.contact.whatsapp} onChange={(v: string) => setPath(["contact", "whatsapp"], v)} />
                 <Field label="Instagram URL" value={c.contact.instagramUrl} onChange={(v: string) => setPath(["contact", "instagramUrl"], v)} />
@@ -323,32 +338,59 @@ export default function Admin() {
                 <Field label="TikTok Handle" value={c.contact.tiktokHandle} onChange={(v: string) => setPath(["contact", "tiktokHandle"], v)} />
               </div>
               <Field label="TikTok URL" value={c.contact.tiktokUrl} onChange={(v: string) => setPath(["contact", "tiktokUrl"], v)} />
-              <Field label="Google Maps URL (opsional, override link tombol)" value={c.contact.mapsUrl} onChange={(v: string) => setPath(["contact", "mapsUrl"], v)} />
-              <div>
-                <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Jam Buka</p>
-                <div className="space-y-2">
-                  {c.contact.hours.map((h, i) => (
-                    <div key={i} className="flex gap-2">
-                      <input value={h.day} onChange={(e) => setPath(["contact", "hours", i, "day"], e.target.value)}
-                        placeholder="Hari" className="flex-1 bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-w-0" />
-                      <input value={h.time} onChange={(e) => setPath(["contact", "hours", i, "time"], e.target.value)}
-                        placeholder="Jam" className="flex-1 bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-w-0" />
-                      <button onClick={() => setPath(["contact", "hours"], c.contact.hours.filter((_, j) => j !== i))}
-                        className="p-2 text-muted-foreground hover:text-destructive shrink-0"><Trash2 className="h-4 w-4" /></button>
+
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">Lokasi Studio</p>
+                  <button onClick={() => setPath(["contact", "locations"], [...(c.contact.locations || []), { studioName: "", address: "", mapsUrl: "", hours: [] }])}
+                    className="glass rounded-xl px-3 py-1.5 text-[11px] flex items-center gap-1.5 hover:maroon-glow">
+                    <Plus className="h-3.5 w-3.5" /> Tambah Lokasi
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(c.contact.locations || []).map((loc, li) => (
+                    <div key={li} className="glass rounded-2xl p-4 sm:p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs tracking-wider text-accent">Lokasi #{li + 1}</p>
+                        <button onClick={() => setPath(["contact", "locations"], (c.contact.locations || []).filter((_, j) => j !== li))}
+                          className="p-2 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                      <Field label="Nama Studio" value={loc.studioName} onChange={(v: string) => setPath(["contact", "locations", li, "studioName"], v)} />
+                      <Field label="Alamat" value={loc.address} onChange={(v: string) => setPath(["contact", "locations", li, "address"], v)} textarea />
+                      <Field label="Google Maps URL" value={loc.mapsUrl} onChange={(v: string) => setPath(["contact", "locations", li, "mapsUrl"], v)} />
+                      <div>
+                        <p className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Jam Buka</p>
+                        <div className="space-y-2">
+                          {(loc.hours || []).map((h, i) => (
+                            <div key={i} className="flex gap-2">
+                              <input value={h.day} onChange={(e) => setPath(["contact", "locations", li, "hours", i, "day"], e.target.value)}
+                                placeholder="Hari" className="flex-1 bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-w-0" />
+                              <input value={h.time} onChange={(e) => setPath(["contact", "locations", li, "hours", i, "time"], e.target.value)}
+                                placeholder="Jam" className="flex-1 bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-w-0" />
+                              <button onClick={() => setPath(["contact", "locations", li, "hours"], (loc.hours || []).filter((_, j) => j !== i))}
+                                className="p-2 text-muted-foreground hover:text-destructive shrink-0"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          ))}
+                          <button onClick={() => setPath(["contact", "locations", li, "hours"], [...(loc.hours || []), { day: "", time: "" }])}
+                            className="glass rounded-xl px-3 py-1.5 text-[11px] flex items-center gap-1.5 hover:maroon-glow"><Plus className="h-3.5 w-3.5" /> Tambah Hari</button>
+                        </div>
+                      </div>
                     </div>
                   ))}
-                  <button onClick={() => setPath(["contact", "hours"], [...c.contact.hours, { day: "", time: "" }])}
-                    className="glass rounded-xl px-4 py-2 text-xs flex items-center gap-2 hover:maroon-glow"><Plus className="h-3.5 w-3.5" /> Tambah Hari</button>
+                  {(!c.contact.locations || c.contact.locations.length === 0) && (
+                    <p className="text-xs text-muted-foreground text-center py-4">Belum ada lokasi. Tambah minimal satu lokasi.</p>
+                  )}
                 </div>
               </div>
             </Card>
           )}
 
           {tab === "order" && (
-            <Card title="Urutan Section">
-              <p className="text-xs text-muted-foreground -mt-2">Atur urutan tampilan section pada halaman utama (di bawah Hero).</p>
+            <Card title="Urutan & Tampilan Section">
+              <p className="text-xs text-muted-foreground -mt-2">Atur urutan section pada halaman utama, dan sembunyikan section yang belum ingin ditampilkan.</p>
               <div className="space-y-2">
                 {c.sectionOrder.map((key, i) => {
+                  const hidden = (c.hiddenSections ?? []).includes(key);
                   const move = (dir: -1 | 1) => {
                     const j = i + dir;
                     if (j < 0 || j >= c.sectionOrder.length) return;
@@ -356,10 +398,20 @@ export default function Admin() {
                     [next[i], next[j]] = [next[j], next[i]];
                     setPath(["sectionOrder"], next);
                   };
+                  const toggleHide = () => {
+                    const cur = c.hiddenSections ?? [];
+                    setPath(["hiddenSections"], hidden ? cur.filter((s) => s !== key) : [...cur, key]);
+                  };
                   return (
-                    <div key={key} className="glass rounded-xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3">
+                    <div key={key} className={`glass rounded-xl px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 ${hidden ? "opacity-50" : ""}`}>
                       <span className="text-xs text-muted-foreground w-6">{i + 1}.</span>
-                      <span className="flex-1 text-sm">{labels[key]}</span>
+                      <span className="flex-1 text-sm">
+                        {labels[key]}
+                        {hidden && <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground">disembunyikan</span>}
+                      </span>
+                      <button onClick={toggleHide} className="p-2 hover:text-accent" title={hidden ? "Tampilkan section" : "Sembunyikan section"} aria-label={hidden ? "Tampilkan section" : "Sembunyikan section"}>
+                        {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                       <button onClick={() => move(-1)} disabled={i === 0} className="p-2 disabled:opacity-30 hover:text-accent"><ArrowUp className="h-4 w-4" /></button>
                       <button onClick={() => move(1)} disabled={i === c.sectionOrder.length - 1} className="p-2 disabled:opacity-30 hover:text-accent"><ArrowDown className="h-4 w-4" /></button>
                     </div>
@@ -367,6 +419,17 @@ export default function Admin() {
                 })}
                 <button onClick={() => setPath(["sectionOrder"], defaultSectionOrder)} className="text-xs text-muted-foreground hover:text-foreground mt-2">Reset urutan default</button>
               </div>
+            </Card>
+          )}
+
+          {tab === "queue" && (
+            <Card title="Manajemen Antrian">
+              <div className="-mt-2 mb-2">
+                <Link to="/admin/queue" className="glass rounded-full px-4 py-2 text-xs inline-flex items-center gap-2 hover:maroon-glow">
+                  <ExternalLink className="h-3.5 w-3.5" /> Buka halaman penuh
+                </Link>
+              </div>
+              <QueuePanel />
             </Card>
           )}
 

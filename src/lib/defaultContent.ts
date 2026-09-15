@@ -1,13 +1,3 @@
-import g1 from "@/assets/g1.jpg";
-import g2 from "@/assets/g2.jpg";
-import g3 from "@/assets/g3.jpg";
-import g4 from "@/assets/g4.jpg";
-import g5 from "@/assets/g5.jpg";
-import g6 from "@/assets/g6.jpg";
-import logo from "@/assets/logo.png";
-import hero from "@/assets/hero.jpeg";
-import about from "@/assets/about2.jpg";
-
 export type SectionKey = "about" | "gallery" | "catalog" | "booking" | "faq" | "feedback" | "contact";
 
 export type SiteContent = {
@@ -37,82 +27,45 @@ export type SiteContent = {
     tiktokHandle: string;
     mapsUrl: string;
     hours: { day: string; time: string }[];
+    locations?: ContactLocation[];
   };
   sectionOrder: SectionKey[];
+  hiddenSections: SectionKey[];
+};
+
+export type ContactLocation = {
+  studioName: string;
+  address: string;
+  mapsUrl: string;
+  hours: { day: string; time: string }[];
 };
 
 export const defaultSectionOrder: SectionKey[] = ["about", "gallery", "catalog", "booking", "faq", "feedback", "contact"];
 
+// Empty shell only — no placeholder text or images. Real content always comes from the database.
 export const defaultContent: SiteContent = {
-  brand: { name: "Inked Space", logoUrl: logo },
-  hero: {
-    tagline: "Jagua Ink Tattoo Studio",
-    title: "Seni Tanpa",
-    titleAccent: "Penyesalan.",
-    subtitle:
-      "Natural · Safe · Halal — tato temporer berbasis jagua ink yang luntur secara alami dalam 2 minggu.",
-    imageUrl: hero,
-  },
-  about: {
-    eyebrow: "Tentang Kami",
-    title: "Brand untuk yang mencintai seni —",
-    titleAccent: "tanpa permanen.",
-    p1: "inked.space lahir dari kecintaan pada estetika tubuh dan kebebasan berekspresi. Kami menghadirkan pengalaman tato yang aman, natural, dan dapat diakses semua orang.",
-    p2: "Menggunakan Jagua Ink — pewarna alami dari buah Genipa Americana asal Amerika Selatan. Hasil akhir hitam pekat menyerupai tato permanen, halal, food-grade, dan luntur sempurna dalam 10–14 hari.",
-    imageUrl: about,
-    stats: [
-      { v: "100%", l: "Natural" },
-      { v: "14d", l: "Tahan Lama" },
-      { v: "Halal", l: "Bersertifikat" },
-    ],
-  },
-  gallery: [
-    { src: g2, label: "Mandala" },
-    { src: g1, label: "Botanical" },
-    { src: g4, label: "Floral" },
-    { src: g5, label: "Geometric" },
-    { src: g3, label: "Minimal" },
-    { src: g6, label: "Tribal" },
-  ],
-  catalog: {
-    title: "Lihat",
-    titleAccent: "Katalog",
-    subtitle: "Telusuri katalog desain lengkap kami dalam bentuk PDF.",
-    buttonLabel: "Buka Katalog",
-    pdfUrl: "",
-  },
-  booking: {
-    title: "Book Your",
-    titleAccent: "Session",
-    subtitle: "Isi form, kami konfirmasi via WhatsApp.",
-    whatsapp: "6289624466641",
-  },
-  faq: [
-    { q: "Apa itu Jagua Ink?", a: "Pewarna alami dari buah Genipa Americana. Menghasilkan warna hitam-kebiruan yang menyerupai tato permanen, namun hanya bertahan 10–14 hari." },
-    { q: "Apakah aman dan halal?", a: "Ya. 100% natural, food-grade, bebas PPD, tidak menyebabkan iritasi pada kulit normal, dan halal karena terbuat dari ekstrak buah." },
-    { q: "Berapa lama proses pembuatannya?", a: "Tergantung kompleksitas desain — umumnya 30 menit hingga 2 jam. Warna penuh muncul setelah 24–48 jam." },
-    { q: "Apakah bisa custom desain?", a: "Tentu. Kirimkan referensi atau ide pada saat booking, dan artist kami akan mendiskusikan bersama Anda." },
-    { q: "Bagaimana cara merawatnya?", a: "Hindari basah selama 2 jam pertama, jangan digosok, dan oleskan pelembab harian untuk menjaga ketajaman warna." },
-  ],
-  feedback: {
-    title: "Kritik &",
-    titleAccent: "Saran",
-    subtitle: "Bantu kami berkembang. Bagikan pengalaman, masukan, atau ide Anda.",
-  },
+  brand: { name: "", logoUrl: "" },
+  hero: { tagline: "", title: "", titleAccent: "", subtitle: "", imageUrl: "" },
+  about: { eyebrow: "", title: "", titleAccent: "", p1: "", p2: "", imageUrl: "", stats: [] },
+  gallery: [],
+  catalog: { title: "", titleAccent: "", subtitle: "", buttonLabel: "", pdfUrl: "" },
+  booking: { title: "", titleAccent: "", subtitle: "", whatsapp: "" },
+  faq: [],
+  feedback: { title: "", titleAccent: "", subtitle: "" },
   contact: {
-    studioName: "Kedai Atap",
-    address: "Kost Elvindo, Jl. Bumi Manti IV lantai atas, Kp. Baru, Kec. Kedaton, Kota Bandar Lampung",
-    whatsapp: "6289624466641",
-    instagramUrl: "https://instagram.com",
-    instagramHandle: "@inked.space",
-    tiktokUrl: "https://tiktok.com/@inked.space",
-    tiktokHandle: "@inked.space",
+    studioName: "",
+    address: "",
+    whatsapp: "",
+    instagramUrl: "",
+    instagramHandle: "",
+    tiktokUrl: "",
+    tiktokHandle: "",
     mapsUrl: "",
-    hours: [
-      { day: "Jumat – Sabtu", time: "18.00 – 22.00 WIB" }
-    ],
+    hours: [],
+    locations: [],
   },
   sectionOrder: defaultSectionOrder,
+  hiddenSections: [],
 };
 
 // Deep merge for partial DB content
@@ -131,5 +84,18 @@ export function mergeContent(partial: any): SiteContent {
   const ord = Array.isArray(merged.sectionOrder) ? merged.sectionOrder.filter((s: any) => valid.has(s)) : [];
   for (const s of defaultSectionOrder) if (!ord.includes(s)) ord.push(s);
   merged.sectionOrder = ord;
+  merged.hiddenSections = Array.isArray(merged.hiddenSections)
+    ? merged.hiddenSections.filter((s: any) => valid.has(s))
+    : [];
+  // Migrate legacy single-location fields into locations[] when present
+  if (!Array.isArray(merged.contact?.locations)) merged.contact.locations = [];
+  if (merged.contact.locations.length === 0 && (merged.contact.studioName || merged.contact.address)) {
+    merged.contact.locations = [{
+      studioName: merged.contact.studioName || "",
+      address: merged.contact.address || "",
+      mapsUrl: merged.contact.mapsUrl || "",
+      hours: Array.isArray(merged.contact.hours) ? merged.contact.hours : [],
+    }];
+  }
   return merged as SiteContent;
 }

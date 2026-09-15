@@ -3,6 +3,7 @@ import { useSiteContent } from "@/hooks/useSiteContent";
 
 export const FAQ = () => {
   const { content: { faq } } = useSiteContent();
+  if (!faq.length) return null;
   return (
     <section id="faq" className="py-12 md:py-24 px-6 bg-secondary/30">
       <div className="max-w-3xl mx-auto">
